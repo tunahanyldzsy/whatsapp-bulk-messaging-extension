@@ -1,0 +1,30 @@
+{
+  "manifest_version": 3,
+  "name": "Whatsapp Toplu Mesaj Gönderici",
+  "version": "1.0",
+  "description": "Excel'den kişileri çek, mesajı yaz ve otomatik gönder.",
+  "icons": {
+    "16": "icon.png",
+    "48": "icon.png",
+    "128": "icon.png"
+  },
+  "permissions": [
+    "storage"
+  ],
+  "host_permissions": [
+    "https://web.whatsapp.com/*"
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [ "icon.png" ],
+      "matches": [ "https://web.whatsapp.com/*" ]
+    }
+  ],
+  "content_scripts": [
+    {
+      "matches": ["https://web.whatsapp.com/*"],
+      "js": ["xlsx.full.min.js", "content.js"],
+      "css": ["style.css"]
+    }
+  ]
+}

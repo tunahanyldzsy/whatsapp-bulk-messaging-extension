@@ -1,0 +1,706 @@
+:root {
+  /* --- TEMEL RENKLER (LIGHT MODE - WhatsApp Web) --- */
+  --wp-primary: #008069;
+  --wp-primary-soft: rgba(0, 128, 105, 0.1);
+
+  /* Arka Planlar */
+  --wp-bg-panel: #ffffff;
+  --wp-card-bg: #ffffff;
+  --wp-border: #e9edef;
+  --wp-status-bg: #f0f2f5;
+
+  /* Input & Form Alanları */
+  --wp-input-bg: #f0f2f5;
+
+  /* Metinler */
+  --wp-text-main: #111b21;
+  --wp-text-sec: #54656f;
+  --wp-text-placeholder: #54656f;
+
+  /* Badge & Butonlar */
+  --wp-badge-bg: #f0f2f5;
+  --wp-badge-text: #54656f;
+  --wp-btn-sec-bg: #e9edef;
+  --wp-btn-sec-text: #111b21;
+  --wp-hover-bg: #f5f6f6;
+  --wp-dot-bg: #d1d7db;
+}
+
+/* --- DARK MODE (System Theme - WhatsApp Web) --- */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --wp-primary: #00a884;
+    --wp-primary-soft: rgba(0, 168, 132, 0.1);
+
+    --wp-bg-panel: #202c33;
+    --wp-card-bg: #2a3942;
+    --wp-border: #222e35;
+    --wp-status-bg: #202c33;
+
+    --wp-input-bg: #2a3942;
+
+    --wp-text-main: #e9edef;
+    --wp-text-sec: #8696a0;
+    --wp-text-placeholder: #8696a0;
+
+    --wp-badge-bg: #2a3942;
+    --wp-badge-text: #8696a0;
+    --wp-btn-sec-bg: #37404a;
+    --wp-btn-sec-text: #e9edef;
+    --wp-hover-bg: #2a3942;
+    --wp-dot-bg: #37404a;
+  }
+}
+
+/* --- PANEL CONTAINER --- */
+#wp-custom-panel {
+  position: relative;
+  width: 100%;
+  z-index: 9999;
+  background: transparent;
+
+  /* padding'i kaldırıyoruz, boşluğu shell'e vereceğiz */
+  padding: 0;
+
+  /* Custom Scrollbar for the panel container if needed */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+}
+
+#wp-custom-panel::-webkit-scrollbar {
+  width: 6px;
+}
+
+#wp-custom-panel::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+#wp-custom-panel::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 20px;
+}
+
+
+/* Reset */
+#wp-custom-panel * {
+  box-sizing: border-box;
+}
+
+/* İç kabuk (Glassmorphism) */
+.wp-shell {
+  /* WhatsApp arama kutusundaki gibi yanlardan içeri göm */
+  margin: 6px 17px 10px 17px;
+  /* üst, sağ, alt, sol */
+  width: auto;
+
+  padding: 10px 8px 10px 10px;
+  border-radius: 18px;
+  background: var(--wp-bg-panel);
+  border: 1px solid rgba(255, 255, 255, 0.26);
+  backdrop-filter: blur(18px) saturate(180%);
+  -webkit-backdrop-filter: blur(18px) saturate(180%);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+}
+
+
+/* --- HEADER --- */
+.wp-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  column-gap: 8px;
+  padding: 6px 8px;
+  border-radius: 999px;
+  background: linear-gradient(135deg,
+      rgba(255, 255, 255, 0.9),
+      rgba(255, 255, 255, 0.75));
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  box-shadow: 0 4px 12px rgba(15, 35, 52, 0.12);
+  cursor: pointer;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+@media (prefers-color-scheme: dark) {
+  .wp-header {
+    background: linear-gradient(135deg,
+        rgba(32, 44, 51, 0.95),
+        rgba(17, 27, 33, 0.92));
+    border-color: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
+  }
+}
+
+.wp-header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.wp-avatar {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 0, rgba(255, 255, 255, 0.8), var(--wp-primary-soft));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
+}
+
+.wp-avatar img {
+  width: 70%;
+  height: 70%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.wp-header-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.wp-header-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--wp-text-main);
+}
+
+.wp-header-sub {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  color: var(--wp-text-sec);
+}
+
+.wp-signature {
+  font-size: 9px;
+  color: var(--wp-text-sec);
+  opacity: 0.8;
+}
+
+.wp-header-toggle {
+  border: none;
+  background: rgba(255, 255, 255, 0.0);
+  padding: 2px 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  transition: background 0.2s ease;
+}
+
+.wp-header-toggle:hover {
+  background: var(--wp-hover-bg);
+}
+
+#wp-toggle-icon {
+  font-size: 12px;
+  color: var(--wp-text-sec);
+  transition: transform 0.25s ease;
+}
+
+#wp-custom-panel.minimized #wp-toggle-icon {
+  transform: rotate(-90deg);
+}
+
+/* --- İÇERİK ALANI --- */
+.wp-content-area {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 4px 2px 0;
+}
+
+#wp-custom-panel.minimized .wp-content-area {
+  display: none;
+}
+
+/* --- GRID (Adım 1 + Adım 2) --- */
+.wp-grid-2 {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+  gap: 8px;
+}
+
+@media (max-width: 360px) {
+  .wp-grid-2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* --- KARTLAR (Glass) --- */
+.wp-card {
+  background: var(--wp-card-bg);
+  background-image: linear-gradient(135deg,
+      rgba(255, 255, 255, 0.9),
+      rgba(255, 255, 255, 0.75));
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  padding: 8px 9px;
+  box-shadow: 0 6px 18px rgba(15, 35, 52, 0.10);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+@media (prefers-color-scheme: dark) {
+  .wp-card {
+    background-image: linear-gradient(135deg,
+        rgba(32, 44, 51, 0.96),
+        rgba(17, 27, 33, 0.9));
+    border-color: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.5);
+  }
+}
+
+.wp-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+  gap: 6px;
+}
+
+.wp-card-head-left {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.wp-card-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--wp-text-main);
+}
+
+.wp-card-sub {
+  font-size: 10px;
+  color: var(--wp-text-sec);
+}
+
+/* Intro kartı */
+.wp-card-intro {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.wp-card-intro-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.wp-card-intro-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--wp-text-main);
+}
+
+.wp-card-intro-sub {
+  font-size: 10px;
+  color: var(--wp-text-sec);
+}
+
+.wp-card-intro-pill {
+  font-size: 10px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--wp-badge-bg);
+  color: var(--wp-badge-text);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+}
+
+/* Adım pill */
+.wp-step-pill {
+  font-size: 10px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: var(--wp-primary-soft);
+  color: var(--wp-primary);
+  font-weight: 600;
+  box-shadow: 0 1px 4px rgba(88, 166, 100, 0.3);
+}
+
+/* --- DOSYA SATIRI --- */
+.wp-file-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.wp-file-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--wp-primary), #4b8f56);
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(88, 166, 100, 0.35);
+  border: none;
+  transition: transform 0.08s ease, box-shadow 0.2s ease, filter 0.2s ease;
+}
+
+.wp-file-btn:hover {
+  filter: brightness(1.03);
+  box-shadow: 0 5px 14px rgba(88, 166, 100, 0.4);
+  transform: translateY(-1px);
+}
+
+box-shadow: 0 2px 7px rgba(88, 166, 100, 0.35);
+transform: scale(0.98);
+}
+
+.wp-file-btn,
+.wp-file-btn *,
+.wp-file-btn input[type="file"] {
+  cursor: pointer !important;
+}
+
+.wp-file-btn input[type="file"] {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+}
+
+/* Excel Temizle butonu */
+.wp-file-reset-btn {
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.2);
+  font-size: 10px;
+  padding: 4px 10px;
+  color: var(--wp-text-sec);
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.wp-file-reset-btn:hover {
+  background: rgba(255, 255, 255, 0.35);
+  border-color: rgba(255, 255, 255, 0.9);
+  color: var(--wp-text-main);
+}
+
+@media (prefers-color-scheme: dark) {
+  .wp-file-reset-btn {
+    border-color: rgba(255, 255, 255, 0.12);
+    background: rgba(32, 44, 51, 0.7);
+  }
+
+  .wp-file-reset-btn:hover {
+    border-color: rgba(255, 255, 255, 0.4);
+    background: rgba(32, 44, 51, 0.95);
+  }
+}
+
+.wp-file-name {
+  flex: 1;
+  font-size: 10px;
+  color: var(--wp-text-sec);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* --- FORM ELEMANLARI --- */
+.wp-select,
+.wp-input,
+.wp-textarea {
+  width: 100%;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  background: var(--wp-input-bg);
+  color: var(--wp-text-main);
+  padding: 6px 8px;
+  font-size: 11px;
+  outline: none;
+  box-sizing: border-box;
+  transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
+}
+
+.wp-select::placeholder,
+.wp-input::placeholder,
+.wp-textarea::placeholder {
+  color: var(--wp-text-placeholder);
+}
+
+.wp-select:focus,
+.wp-input:focus,
+.wp-textarea:focus {
+  border-color: var(--wp-primary);
+  box-shadow: 0 0 0 1px rgba(88, 166, 100, 0.25);
+}
+
+.wp-textarea {
+  resize: none;
+  height: 60px;
+}
+
+/* --- ETİKET BUTONLARI --- */
+.wp-tag-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 5px;
+}
+
+.wp-tag-btn {
+  border: none;
+  background: var(--wp-badge-bg);
+  font-size: 10px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  color: var(--wp-badge-text);
+  cursor: pointer;
+  font-weight: 500;
+  transition: background 0.2s, color 0.2s, box-shadow 0.2s, transform 0.08s;
+}
+
+.wp-tag-btn:hover {
+  background: var(--wp-primary);
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, .2);
+  transform: translateY(-0.5px);
+}
+
+/* --- GRIDLER --- */
+.wp-time-grid,
+.wp-settings-grid-single {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.wp-label-small {
+  font-size: 10px;
+  color: var(--wp-text-sec);
+  margin-bottom: 2px;
+  display: block;
+}
+
+/* --- GELİŞMİŞ AYARLAR --- */
+.wp-card-head-settings {
+  align-items: center;
+}
+
+.wp-settings-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: none;
+  background: transparent;
+  font-size: 10px;
+  color: var(--wp-text-sec);
+  padding: 3px 8px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.wp-settings-toggle:hover {
+  background: var(--wp-hover-bg);
+}
+
+.wp-settings-chevron {
+  font-size: 10px;
+  transition: transform 0.2s ease;
+}
+
+.wp-settings-toggle.open .wp-settings-chevron {
+  transform: rotate(180deg);
+}
+
+.wp-settings-body {
+  margin-top: 5px;
+  display: none;
+}
+
+.wp-settings-body.open {
+  display: block;
+}
+
+.wp-settings-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.wp-settings-actions {
+  grid-column: span 2;
+  display: flex;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.wp-settings-btn {
+  flex: 1;
+  border-radius: 999px;
+  border: none;
+  padding: 4px 0;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  background: linear-gradient(135deg, var(--wp-primary), #4b8f56);
+  color: #ffffff;
+  box-shadow: 0 4px 10px rgba(88, 166, 100, 0.36);
+  transition: box-shadow 0.2s, transform 0.08s, filter 0.2s;
+}
+
+.wp-settings-btn:hover {
+  filter: brightness(1.03);
+  transform: translateY(-1px);
+}
+
+.wp-settings-btn-secondary {
+  background: var(--wp-btn-sec-bg);
+  color: var(--wp-btn-sec-text);
+  box-shadow: none;
+}
+
+.wp-settings-hint {
+  grid-column: span 2;
+  margin-top: 4px;
+  font-size: 9px;
+  color: var(--wp-text-sec);
+}
+
+/* --- ANA BUTONLAR + GRUP --- */
+.wp-actions-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.wp-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.wp-btn-main {
+  width: 100%;
+  border-radius: 999px;
+  border: none;
+  padding: 7px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  background: linear-gradient(135deg, var(--wp-primary), #4b8f56);
+  color: #ffffff;
+  transition: box-shadow 0.2s, transform 0.08s, background 0.2s, filter 0.2s;
+  box-shadow: 0 5px 16px rgba(88, 166, 100, 0.42);
+}
+
+.wp-btn-main:hover:not(:disabled) {
+  box-shadow: 0 7px 20px rgba(88, 166, 100, 0.5);
+  transform: translateY(-1px);
+  filter: brightness(1.03);
+}
+
+.wp-btn-main:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 3px 10px rgba(88, 166, 100, 0.36);
+}
+
+.wp-btn-main:disabled {
+  background: var(--wp-btn-sec-bg);
+  color: var(--wp-text-sec);
+  cursor: default;
+  box-shadow: none;
+}
+
+.wp-btn-stop {
+  background: linear-gradient(135deg, #ff3b30, #d91633);
+  box-shadow: 0 5px 16px rgba(217, 22, 51, 0.45);
+  display: none;
+}
+
+/* --- DURUM BARI --- */
+.wp-status-bar {
+  margin-top: 4px;
+  padding: 6px 8px;
+  border-radius: 10px;
+  background: var(--wp-status-bg);
+  font-size: 10px;
+  color: var(--wp-text-sec);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+.wp-status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--wp-dot-bg);
+}
+
+.wp-status-dot.active {
+  background: var(--wp-primary);
+  box-shadow: 0 0 0 2px rgba(88, 166, 100, 0.3);
+}
+
+/* --- GİZLİLİK (Privacy) --- */
+
+/* 
+   Kullanıcı Talebi: Tek bir ayar ile tüm sohbet satırını gizle.
+   .wp-blur-chats sınıfı body'e eklenince çalışır.
+*/
+
+body.wp-blur-chats #pane-side div[role="row"] {
+  filter: blur(6px) grayscale(20%);
+  transition: filter 0.3s ease;
+  opacity: 0.85;
+}
+
+/* Kullanıcı satırın üzerine gelince aç */
+body.wp-blur-chats #pane-side div[role="row"]:hover {
+  filter: none !important;
+  opacity: 1;
+}
+
+/* --- QUICK HEADER BUTTON (Toggle) --- */
+.wp-header-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  transition: background 0.2s;
+  color: var(--wp-text-sec);
+  margin-right: 8px;
+  /* Diğer ikonlardan ayır */
+}
+
+.wp-header-btn:hover {
+  background: var(--wp-hover-bg);
+}
+
+.wp-header-btn.active {
+  color: var(--wp-primary);
+  background: var(--wp-primary-soft);
+}
+
+.wp-header-btn svg {
+  width: 24px;
+  height: 24px;
+  fill: currentColor;
+}
