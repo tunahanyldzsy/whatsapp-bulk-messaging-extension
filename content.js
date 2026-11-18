@@ -57,7 +57,10 @@ function isTagColumnKey(key) {
 /* ==== Settings (selector) ==== */
 
 const DEFAULT_SETTINGS = {
-  sendButtonSelector: 'span[data-icon="wds-ic-send-filled"]',
+  // Current WhatsApp / WhatsApp Business: <button aria-label="Send"> in the footer (no data-icon).
+  // Legacy icon selectors are kept as fallback, e.g. for the media preview send button.
+  sendButtonSelector:
+    'footer button[aria-label="Send"], span[data-icon="wds-ic-send-filled"], span[data-icon="send"]',
   // Master privacy mode
   blurChat: false,
   // What to blur when privacy mode is ON
@@ -77,6 +80,10 @@ function loadSettings() {
       const parsed = JSON.parse(raw);
       if (parsed && typeof parsed === "object") {
         userSettings = { ...DEFAULT_SETTINGS, ...parsed };
+        // Migrate the old default selector that no longer exists in WhatsApp's DOM.
+        if (userSettings.sendButtonSelector === 'span[data-icon="wds-ic-send-filled"]') {
+          userSettings.sendButtonSelector = DEFAULT_SETTINGS.sendButtonSelector;
+        }
       }
     }
   } catch (e) {
@@ -1090,7 +1097,7 @@ async function processQueueItem(payload) {
 
     if (!skip) {
       const selector = sendButtonSelector || DEFAULT_SETTINGS.sendButtonSelector;
-      let text = String(selectedTemplate || "")
+      let text = resolveSpintax(String(selectedTemplate || ""))
         .replace(/{{Ad}}/g, person.ad)
         .replace(/{{Soyad}}/g, person.soyad)
         .replace(/{{Hitap}}/g, person.hitap || "")
@@ -1437,7 +1444,17 @@ function toggleButtons(active) {
   stopBtn.style.display = active ? "block" : "none";
 }
 
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+// Picks one random option from each {a|b|c} group. Groups without "|" (e.g. {{FirstName}}) are untouched.
+function resolveSpintax(template) {
+  return template.replace(/\{([^{}]*\|[^{}]*)\}/g, (_, group) => {
+    const options = group.split("|");
+    return options[Math.floor(Math.random() * options.length)];
+  });
+}
+
+// Adds ±30% random jitter so internal waits never follow a fixed rhythm.
+const sleep = (ms) =>
+  new Promise((r) => setTimeout(r, Math.round(ms * (0.7 + Math.random() * 0.6))));
 
 function waitForElement(selector, timeout) {
   return new Promise((resolve) => {

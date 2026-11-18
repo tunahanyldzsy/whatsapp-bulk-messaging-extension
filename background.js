@@ -318,8 +318,9 @@ async function executeTaskStep() {
 
   if (result.status !== "skipped") {
     if (nextTask.breakCount > 0 && nextTask.sentCount > 0 && nextTask.sentCount % nextTask.breakCount === 0) {
-      delayMs = nextTask.breakSec * 1000;
-      statusMessage = `⏳ Pausa: ${nextTask.breakSec}s · Siguiente: ${formatNextContactLabel(upcomingContact)}`;
+      const breakSeconds = Math.round(nextTask.breakSec * (0.75 + Math.random() * 0.5));
+      delayMs = breakSeconds * 1000;
+      statusMessage = `⏳ Pausa: ${breakSeconds}s · Siguiente: ${formatNextContactLabel(upcomingContact)}`;
     } else {
       const waitSeconds = randomIntInclusive(nextTask.minTime, nextTask.maxTime);
       delayMs = waitSeconds * 1000;
