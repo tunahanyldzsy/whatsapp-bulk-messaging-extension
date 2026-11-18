@@ -2,8 +2,87 @@ const TASK_STORAGE_KEY = "wpSenderTask";
 const TASK_ALARM_NAME = "wpSenderNextStep";
 const DEFAULT_BREAK_COUNT = 45;
 const DEFAULT_BREAK_SEC = 120;
-const DEFAULT_SEND_SELECTOR = 'span[data-icon="wds-ic-send-filled"]';
+const DEFAULT_SEND_SELECTOR =
+  'footer button[aria-label="Send"], footer button[aria-label="Enviar"], footer button[aria-label="Enviar mensagem"], span[data-icon="wds-ic-send-filled"], span[data-icon="send"]';
+
+// Sending limits (edit here). Counted over successfully sent messages.
+const HOURLY_LIMIT = 40;
+const DAILY_LIMIT = 200;
+// Warm-up: the daily cap grows from WARMUP_START_PER_DAY by WARMUP_STEP_PER_DAY
+// for every day since the first message ever sent with this extension, up to DAILY_LIMIT.
+const WARMUP_ENABLED = true;
+const WARMUP_START_PER_DAY = 30;
+const WARMUP_STEP_PER_DAY = 20;
+// Safety stop after this many consecutive failed contacts.
+const MAX_CONSECUTIVE_ERRORS = 3;
+
+const LOG_STORAGE_KEY = "wpSenderLog";
+const FIRST_SEND_STORAGE_KEY = "wpSenderFirstSendAt";
+const LOG_MAX_ENTRIES = 2000;
+const HOUR_MS = 60 * 60 * 1000;
 let executeStepLock = false;
+
+async function getLog() {
+  const stored = await chrome.storage.local.get(LOG_STORAGE_KEY);
+  return Array.isArray(stored[LOG_STORAGE_KEY]) ? stored[LOG_STORAGE_KEY] : [];
+}
+
+async function appendLog(entry) {
+  const log = await getLog();
+  log.push(entry);
+  await chrome.storage.local.set({ [LOG_STORAGE_KEY]: log.slice(-LOG_MAX_ENTRIES) });
+
+  if (entry.status === "sent") {
+    const stored = await chrome.storage.local.get(FIRST_SEND_STORAGE_KEY);
+    if (!stored[FIRST_SEND_STORAGE_KEY]) {
+      await chrome.storage.local.set({ [FIRST_SEND_STORAGE_KEY]: entry.ts });
+    }
+  }
+}
+
+function startOfLocalDay(now) {
+  const d = new Date(now);
+  d.setHours(0, 0, 0, 0);
+  return d.getTime();
+}
+
+// Returns { blocked: false } or { blocked: true, resumeAt, reason }.
+async function checkSendLimits(now = Date.now()) {
+  const log = await getLog();
+  const sent = log.filter((e) => e.status === "sent").map((e) => e.ts);
+
+  const dayStart = startOfLocalDay(now);
+  const sentToday = sent.filter((ts) => ts >= dayStart);
+
+  let dailyCap = DAILY_LIMIT;
+  if (WARMUP_ENABLED) {
+    const stored = await chrome.storage.local.get(FIRST_SEND_STORAGE_KEY);
+    const firstSendAt = stored[FIRST_SEND_STORAGE_KEY];
+    const daysActive = firstSendAt
+      ? Math.floor((dayStart - startOfLocalDay(firstSendAt)) / (24 * HOUR_MS))
+      : 0;
+    dailyCap = Math.min(DAILY_LIMIT, WARMUP_START_PER_DAY + WARMUP_STEP_PER_DAY * daysActive);
+  }
+
+  if (sentToday.length >= dailyCap) {
+    return {
+      blocked: true,
+      resumeAt: dayStart + 24 * HOUR_MS + randomIntInclusive(1, 10) * 60 * 1000,
+      reason: `Límite diario alcanzado (${sentToday.length}/${dailyCap})`
+    };
+  }
+
+  const lastHour = sent.filter((ts) => ts > now - HOUR_MS);
+  if (lastHour.length >= HOURLY_LIMIT) {
+    return {
+      blocked: true,
+      resumeAt: Math.min(...lastHour) + HOUR_MS + randomIntInclusive(10, 120) * 1000,
+      reason: `Límite por hora alcanzado (${lastHour.length}/${HOURLY_LIMIT})`
+    };
+  }
+
+  return { blocked: false };
+}
 
 async function reloadWhatsAppTabs() {
   const tabs = await chrome.tabs.query({ url: "https://web.whatsapp.com/*" });
@@ -253,6 +332,23 @@ async function executeTaskStep() {
     return;
   }
 
+  const limits = await checkSendLimits();
+  if (limits.blocked) {
+    const resumeTime = new Date(limits.resumeAt).toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit"
+    });
+    const pausedTask = {
+      ...task,
+      statusMessage: `⏸ ${limits.reason}. Se reanuda a las ${resumeTime}`,
+      nextRunAt: limits.resumeAt
+    };
+    await setTask(pausedTask);
+    await scheduleNextRun(pausedTask.nextRunAt);
+    await pushState(pausedTask);
+    return;
+  }
+
   const person = task.queue[task.currentIndex];
   const selectedTemplate = pickRandomTemplate(task.msgTemplates, task.lastTemplateIndex);
   const processingTask = {
@@ -295,8 +391,28 @@ async function executeTaskStep() {
     message: "❌ No se recibió respuesta desde la pestaña."
   };
 
+  await appendLog({
+    ts: Date.now(),
+    status: result.status,
+    name: person?.ad || "",
+    phone: person?.phone || "",
+    message: result.message || ""
+  });
+
+  const errorStreak = result.status === "error" ? (task.errorStreak || 0) + 1 : 0;
+
+  if (result.status === "blocked" || errorStreak >= MAX_CONSECUTIVE_ERRORS) {
+    await stopTask(
+      result.status === "blocked"
+        ? `🛑 WhatsApp mostró un aviso de restricción. Proceso detenido. ${result.message || ""}`.trim()
+        : `🛑 ${errorStreak} errores seguidos. Proceso detenido por seguridad.`
+    );
+    return;
+  }
+
   const nextTask = {
     ...processingTask,
+    errorStreak,
     currentIndex: task.currentIndex + 1,
     sentCount: task.sentCount + (result.status === "sent" ? 1 : 0)
   };
@@ -353,6 +469,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message?.type === "WP_STOP_SENDING") {
     stopTask("⛔ Proceso detenido.")
       .then(sendResponse)
+      .catch((error) => sendResponse({ ok: false, error: error.message }));
+    return true;
+  }
+
+  if (message?.type === "WP_GET_LOG") {
+    getLog()
+      .then((log) => sendResponse({ ok: true, log }))
       .catch((error) => sendResponse({ ok: false, error: error.message }));
     return true;
   }

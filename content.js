@@ -60,7 +60,7 @@ const DEFAULT_SETTINGS = {
   // Current WhatsApp / WhatsApp Business: <button aria-label="Send"> in the footer (no data-icon).
   // Legacy icon selectors are kept as fallback, e.g. for the media preview send button.
   sendButtonSelector:
-    'footer button[aria-label="Send"], span[data-icon="wds-ic-send-filled"], span[data-icon="send"]',
+    'footer button[aria-label="Send"], footer button[aria-label="Enviar"], footer button[aria-label="Enviar mensagem"], span[data-icon="wds-ic-send-filled"], span[data-icon="send"]',
   // Master privacy mode
   blurChat: false,
   // What to blur when privacy mode is ON
@@ -375,6 +375,7 @@ function injectPanel() {
           <div class="wp-actions">
             <button id="wp-start" class="wp-btn-main" disabled>INICIAR</button>
             <button id="wp-stop" class="wp-btn-main wp-btn-stop">DETENER</button>
+            <button id="wp-export-log" class="wp-btn-main">REGISTRO</button>
           </div>
 
           <div class="wp-status-bar">
@@ -1010,6 +1011,37 @@ function setupEvents() {
     }
   };
 
+  // EXPORT LOG (CSV)
+  const exportBtn = document.getElementById("wp-export-log");
+  if (exportBtn) {
+    exportBtn.onclick = async (e) => {
+      e.stopPropagation();
+      try {
+        const response = await sendRuntimeMessage({ type: "WP_GET_LOG" });
+        const log = response?.log || [];
+        if (log.length === 0) {
+          setStatus("No hay registros todavía.");
+          return;
+        }
+        const esc = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+        const rows = [["date", "status", "name", "phone", "message"].join(",")].concat(
+          log.map((r) =>
+            [new Date(r.ts).toISOString(), r.status, r.name, r.phone, r.message].map(esc).join(",")
+          )
+        );
+        const blob = new Blob(["﻿" + rows.join("\n")], { type: "text/csv;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "whatsapp-sender-log.csv";
+        a.click();
+        URL.revokeObjectURL(url);
+      } catch (error) {
+        console.error("Could not export log:", error);
+      }
+    };
+  }
+
   // STOP
   stopBtn.onclick = async (e) => {
     e.stopPropagation();
@@ -1036,6 +1068,20 @@ function setupEvents() {
 
 /* ==== Sending Engine ==== */
 
+// Looks for a WhatsApp dialog warning about spam/restriction/ban. Returns its text or null.
+function detectRestrictionNotice() {
+  const pattern =
+    /spam|restrict|temporarily banned|account.{0,20}(banned|blocked)|unusual activity|automated|bloquead|restring|actividad inusual|suspendid|banead/i;
+  const dialogs = document.querySelectorAll(
+    '[role="dialog"], [role="alertdialog"], [data-animate-modal-popup]'
+  );
+  for (const dialog of dialogs) {
+    const text = (dialog.textContent || "").trim();
+    if (pattern.test(text)) return text.slice(0, 160);
+  }
+  return null;
+}
+
 async function processQueueItem(payload) {
   const {
     person,
@@ -1060,6 +1106,14 @@ async function processQueueItem(payload) {
   const personLabel = formatPersonLabel(person);
 
   setStatus(`Preparando (${position}/${totalCount}): ${personLabel}`);
+
+  const restriction = detectRestrictionNotice();
+  if (restriction) {
+    return {
+      status: "blocked",
+      message: restriction
+    };
+  }
 
   const link = document.createElement("a");
   link.href = baseUrl;
